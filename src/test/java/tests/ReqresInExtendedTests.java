@@ -14,12 +14,15 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static specs.LoginSpecs.loginRequestSpec;
+import static specs.LoginSpecs.loginResponseSpec;
 
 public class ReqresInExtendedTests {
 
     @Test
     void successfulLoginBadPracticeTest() {
-        String requestBody = "{ \"email\": \"eve.holt@reqres.in\", \"password\": \"cityslicka\" }"; // BAD PRACTICE
+        String requestBody = "{ \"email\": \"eve.holt@reqres.in\", " +
+                "\"password\": \"cityslicka\" }"; // BAD PRACTICE
 
         given()
                 .log().uri()
@@ -149,7 +152,6 @@ public class ReqresInExtendedTests {
         assertEquals("QpwL5tke4Pnpja7X4", loginResponse.getToken());
     }
 
-
     @Test
     void successfulLoginWithStepsTest() {
         LoginBodyLombokModel requestBody = new LoginBodyLombokModel();
@@ -169,6 +171,25 @@ public class ReqresInExtendedTests {
                     .log().status()
                     .log().body()
                     .statusCode(200)
+                    .extract().as(LoginResponseLombokModel.class));
+        step("Check response", () ->
+            assertEquals("QpwL5tke4Pnpja7X4", loginResponse.getToken()));
+    }
+
+    @Test
+    void successfulLoginWithSpecsTest() {
+        LoginBodyLombokModel requestBody = new LoginBodyLombokModel();
+        requestBody.setEmail("eve.holt@reqres.in");
+        requestBody.setPassword("cityslicka");
+
+        LoginResponseLombokModel loginResponse = step("Make request", () ->
+             given(loginRequestSpec)
+//                    .spec(loginRequestSpec)
+                    .body(requestBody)
+                    .when()
+                    .post("/login")
+                    .then()
+                    .spec(loginResponseSpec)
                     .extract().as(LoginResponseLombokModel.class));
         step("Check response", () ->
             assertEquals("QpwL5tke4Pnpja7X4", loginResponse.getToken()));
